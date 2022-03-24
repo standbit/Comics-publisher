@@ -20,6 +20,7 @@ def fetch_comic():
     extension = get_file_extension(comic_link)
     filename = f"{comic_name}{extension}"
     download_comic(comic_link, filename)
+    print(converted_response["alt"])
 
 
 def main():
