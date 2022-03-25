@@ -1,7 +1,9 @@
+import os
 import requests
 from urllib.parse import urlparse
 from save_comic import download_comic
 from os.path import splitext
+from dotenv import load_dotenv
 
 
 def get_file_extension(link):
@@ -24,6 +26,8 @@ def fetch_comic():
 
 
 def main():
+    load_dotenv()
+    api_token = os.getenv("VK_CLIENT_ID")
     try:
         fetch_comic()
     except requests.exceptions.HTTPError as err:
