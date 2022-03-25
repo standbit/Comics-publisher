@@ -62,6 +62,24 @@ def download_img_to_server(upload_url):
     return converted_response
 
 
+def download_img_to_group(token, server_data):
+    url = "https://api.vk.com/method/photos.saveWallPhoto"
+    payload = {
+        "access_token": token,
+        "group_id": 212094963,
+        "v": 5.131,
+        "photo": server_data["photo"],
+        "server": server_data["server"],
+        "hash": server_data["hash"]
+    }
+    response = requests.post(
+        url,
+        params=payload)
+    response.raise_for_status()
+    converted_response = response.json()
+    return converted_response
+
+
 def main():
     load_dotenv()
     # api_token = os.getenv("VK_CLIENT_ID")
@@ -71,7 +89,9 @@ def main():
         # vk_groups = get_vk_response(vk_token)
         server_url = get_server_address(vk_token)["response"]["upload_url"]
         downloading_result = download_img_to_server(server_url)
-        pprint(downloading_result)
+        # pprint(downloading_result)
+        response = download_img_to_group(vk_token, downloading_result)
+        pprint(response)
     except requests.exceptions.HTTPError as err:
         print("General Error, incorrect link\n", str(err))
     except requests.ConnectionError as err:
