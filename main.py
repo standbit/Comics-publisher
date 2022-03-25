@@ -51,6 +51,17 @@ def get_server_address(token):
     return converted_response
 
 
+def download_img_to_server(upload_url):
+    with open("Python.png", "rb") as file:
+        files = {
+            "photo": file,  # Вместо ключа "media" скорее всего нужно подставить другое название ключа. Какое конкретно см. в доке API ВК.
+            }
+        response = requests.post(upload_url, files=files)
+        response.raise_for_status()
+    converted_response = response.json()
+    return converted_response
+
+
 def main():
     load_dotenv()
     # api_token = os.getenv("VK_CLIENT_ID")
@@ -58,8 +69,9 @@ def main():
     try:
         # fetch_comic()
         # vk_groups = get_vk_response(vk_token)
-        server_address = get_server_address(vk_token)
-        pprint(server_address)
+        server_url = get_server_address(vk_token)["response"]["upload_url"]
+        downloading_result = download_img_to_server(server_url)
+        pprint(downloading_result)
     except requests.exceptions.HTTPError as err:
         print("General Error, incorrect link\n", str(err))
     except requests.ConnectionError as err:
