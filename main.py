@@ -38,14 +38,28 @@ def get_vk_response(token):
     return converted_response
 
 
+def get_server_address(token):
+    url = "https://api.vk.com/method/photos.getWallUploadServer"
+    payload = {
+        "access_token": token,
+        "group_id": 212094963,
+        "v": 5.131,
+    }
+    response = requests.get(url, params=payload)
+    response.raise_for_status()
+    converted_response = response.json()
+    return converted_response
+
+
 def main():
     load_dotenv()
     # api_token = os.getenv("VK_CLIENT_ID")
     vk_token = os.getenv("VK_ACCESS_TOKEN")
     try:
         # fetch_comic()
-        vk_groups = get_vk_response(vk_token)
-        pprint(vk_groups)
+        # vk_groups = get_vk_response(vk_token)
+        server_address = get_server_address(vk_token)
+        pprint(server_address)
     except requests.exceptions.HTTPError as err:
         print("General Error, incorrect link\n", str(err))
     except requests.ConnectionError as err:
