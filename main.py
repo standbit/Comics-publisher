@@ -23,19 +23,7 @@ def fetch_comic():
     extension = get_file_extension(comic_link)
     filename = f"{comic_name}{extension}"
     download_comic(comic_link, filename)
-    print(converted_response["alt"])
-
-
-def get_vk_response(token):
-    url = "https://api.vk.com/method/groups.get"
-    payload = {
-        "access_token": token,
-        "v": 5.131,
-    }
-    response = requests.get(url, params=payload)
-    response.raise_for_status()
-    converted_response = response.json()
-    return converted_response
+    return converted_response["alt"]
 
 
 def get_server_address(token):
@@ -54,7 +42,7 @@ def get_server_address(token):
 def download_img_to_server(upload_url):
     with open("Python.png", "rb") as file:
         files = {
-            "photo": file,  # Вместо ключа "media" скорее всего нужно подставить другое название ключа. Какое конкретно см. в доке API ВК.
+            "photo": file,
             }
         response = requests.post(upload_url, files=files)
         response.raise_for_status()
@@ -80,18 +68,34 @@ def download_img_to_group(token, server_data):
     return converted_response
 
 
+def publish_comic(token, photo_data, comments):
+    url = "https://api.vk.com/method/wall.post"
+    owner_id = photo_data["response"][0]["owner_id"]
+    media_id = photo_data["response"][0]["id"]
+    payload = {
+        "owner_id": -212094963,
+        "from_group": 1,
+        "message": comments,
+        "access_token": token,
+        "v": 5.131,
+        "attachments": f"photo{owner_id}_{media_id}"
+        }
+    r = requests.post(url, params=payload)
+    r.raise_for_status()
+    return r
+
+
 def main():
     load_dotenv()
-    # api_token = os.getenv("VK_CLIENT_ID")
     vk_token = os.getenv("VK_ACCESS_TOKEN")
     try:
-        # fetch_comic()
-        # vk_groups = get_vk_response(vk_token)
+        comments = fetch_comic()
         server_url = get_server_address(vk_token)["response"]["upload_url"]
         downloading_result = download_img_to_server(server_url)
-        # pprint(downloading_result)
-        response = download_img_to_group(vk_token, downloading_result)
-        pprint(response)
+        vk_response = download_img_to_group(vk_token, downloading_result)
+        print(vk_response["response"][0]["id"], vk_response["response"][0]["owner_id"])
+        r = publish_comic(vk_token, vk_response, comments)
+        print(r.url, r.status_code)
     except requests.exceptions.HTTPError as err:
         print("General Error, incorrect link\n", str(err))
     except requests.ConnectionError as err:
