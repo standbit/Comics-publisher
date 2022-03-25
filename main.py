@@ -4,6 +4,7 @@ from urllib.parse import urlparse
 from save_comic import download_comic
 from os.path import splitext
 from dotenv import load_dotenv
+from pprint import pprint
 
 
 def get_file_extension(link):
@@ -25,11 +26,26 @@ def fetch_comic():
     print(converted_response["alt"])
 
 
+def get_vk_response(token):
+    url = "https://api.vk.com/method/groups.get"
+    payload = {
+        "access_token": token,
+        "v": 5.131,
+    }
+    response = requests.get(url, params=payload)
+    response.raise_for_status()
+    converted_response = response.json()
+    return converted_response
+
+
 def main():
     load_dotenv()
-    api_token = os.getenv("VK_CLIENT_ID")
+    # api_token = os.getenv("VK_CLIENT_ID")
+    vk_token = os.getenv("VK_ACCESS_TOKEN")
     try:
-        fetch_comic()
+        # fetch_comic()
+        vk_groups = get_vk_response(vk_token)
+        pprint(vk_groups)
     except requests.exceptions.HTTPError as err:
         print("General Error, incorrect link\n", str(err))
     except requests.ConnectionError as err:
