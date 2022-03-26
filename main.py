@@ -5,8 +5,8 @@ from last_comic_num import get_last_comic_num
 from save_comic import download_comic
 from os.path import splitext
 from dotenv import load_dotenv
-from pprint import pprint
 import random
+
 
 def get_file_extension(link):
     link_path = urlparse(link).path
