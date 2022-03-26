@@ -27,7 +27,6 @@ def fetch_comic():
     extension = get_file_extension(comic_link)
     filename = f"{comic_name}{extension}"
     download_comic(comic_link, filename)
-    print(filename)
     return filename, converted_response["alt"]
 
 
@@ -99,10 +98,13 @@ def main():
         uploading_result = upload_img_to_server(filename, server_url)
         vk_response = download_img_to_group(vk_token, uploading_result)
         r = publish_comic(vk_token, vk_response, comments)
+        os.remove(f"./{filename}")
     except requests.exceptions.HTTPError as err:
         print("General Error, incorrect link\n", str(err))
     except requests.ConnectionError as err:
         print("Connection Error. Check Internet connection.\n", str(err))
+    except OSError as err:
+        print ("Error: %s - %s." % (err.filename, err.strerror))
 
 
 if __name__ == "__main__":
