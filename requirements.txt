@@ -1,2 +1,4 @@
 requests==2.27.*
 python-dotenv==0.20.*
+bs4==0.0.*
+lxml==4.8.*

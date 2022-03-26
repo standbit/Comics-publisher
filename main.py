@@ -1,11 +1,12 @@
 import os
 import requests
 from urllib.parse import urlparse
+from last_comic_num import get_last_comic_num
 from save_comic import download_comic
 from os.path import splitext
 from dotenv import load_dotenv
 from pprint import pprint
-
+import random
 
 def get_file_extension(link):
     link_path = urlparse(link).path
@@ -14,7 +15,10 @@ def get_file_extension(link):
 
 
 def fetch_comic():
-    url = "https://xkcd.com/353/info.0.json"
+    first_comic_num = 1
+    last_comic_num = int(get_last_comic_num())
+    comic_num = random.randint(first_comic_num, last_comic_num)
+    url = f"https://xkcd.com/{comic_num}/info.0.json"
     response = requests.get(url)
     response.raise_for_status()
     converted_response = response.json()
@@ -23,7 +27,8 @@ def fetch_comic():
     extension = get_file_extension(comic_link)
     filename = f"{comic_name}{extension}"
     download_comic(comic_link, filename)
-    return converted_response["alt"]
+    print(filename)
+    return filename, converted_response["alt"]
 
 
 def get_server_address(token):
@@ -39,8 +44,8 @@ def get_server_address(token):
     return converted_response
 
 
-def download_img_to_server(upload_url):
-    with open("Python.png", "rb") as file:
+def upload_img_to_server(filename, upload_url):
+    with open(filename, "rb") as file:
         files = {
             "photo": file,
             }
@@ -89,13 +94,11 @@ def main():
     load_dotenv()
     vk_token = os.getenv("VK_ACCESS_TOKEN")
     try:
-        comments = fetch_comic()
+        filename, comments = fetch_comic()
         server_url = get_server_address(vk_token)["response"]["upload_url"]
-        downloading_result = download_img_to_server(server_url)
-        vk_response = download_img_to_group(vk_token, downloading_result)
-        print(vk_response["response"][0]["id"], vk_response["response"][0]["owner_id"])
+        uploading_result = upload_img_to_server(filename, server_url)
+        vk_response = download_img_to_group(vk_token, uploading_result)
         r = publish_comic(vk_token, vk_response, comments)
-        print(r.url, r.status_code)
     except requests.exceptions.HTTPError as err:
         print("General Error, incorrect link\n", str(err))
     except requests.ConnectionError as err:
