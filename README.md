@@ -32,8 +32,7 @@ $ python3 main.py
 
 Результат работы программы:
 
-
-
+![api_similar_video](https://user-images.githubusercontent.com/77130336/160234207-d1f53eb2-0f97-4c3b-b77c-af64aa32ce36.gif)
 
 ## Цель проекта
 Код написан в образовательных целях на онлайн-курсе для веб-разработчиков [dvmn.org](http://dvmn.org/)
