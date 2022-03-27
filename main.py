@@ -1,17 +1,34 @@
 import os
-import requests
-from urllib.parse import urlparse
-from last_comic_num import get_last_comic_num
-from save_comic import download_comic
-from os.path import splitext
-from dotenv import load_dotenv
 import random
+from os.path import splitext
+from urllib.parse import urlparse
+
+import requests
+from bs4 import BeautifulSoup
+from dotenv import load_dotenv
 
 
 def get_file_extension(link):
     link_path = urlparse(link).path
     extension = splitext(link_path)[-1]
     return extension
+
+
+def get_last_comic_num():
+    url = "https://xkcd.com/"
+    response = requests.get(url)
+    response.raise_for_status()
+    content = BeautifulSoup(response.text, "lxml")
+    comic_url = content.body.select('a[href^="https://xkcd.com/2"]')[0].text
+    last_comic_num = urlparse(comic_url).path.split("/")[1]
+    return last_comic_num
+
+
+def download_comic(url, filename):
+    response = requests.get(url)
+    response.raise_for_status()
+    with open(filename, "wb") as file:
+        file.write(response.content)
 
 
 def fetch_comic():
@@ -22,15 +39,16 @@ def fetch_comic():
     response = requests.get(url)
     response.raise_for_status()
     converted_response = response.json()
+    comments = converted_response["alt"]
     comic_link = converted_response["img"]
-    comic_name = converted_response["safe_title"]
     extension = get_file_extension(comic_link)
+    comic_name = converted_response["safe_title"]
     filename = f"{comic_name}{extension}"
     download_comic(comic_link, filename)
-    return filename, converted_response["alt"]
+    return filename, comments
 
 
-def get_server_address(token):
+def get_server_link(token):
     url = "https://api.vk.com/method/photos.getWallUploadServer"
     payload = {
         "access_token": token,
@@ -39,8 +57,8 @@ def get_server_address(token):
     }
     response = requests.get(url, params=payload)
     response.raise_for_status()
-    converted_response = response.json()
-    return converted_response
+    server_link = response.json()["response"]["upload_url"]
+    return server_link
 
 
 def upload_img_to_server(filename, upload_url):
@@ -50,32 +68,32 @@ def upload_img_to_server(filename, upload_url):
             }
         response = requests.post(upload_url, files=files)
         response.raise_for_status()
-    converted_response = response.json()
-    return converted_response
+    server_response = response.json()
+    return server_response
 
 
-def download_img_to_group(token, server_data):
+def download_img_to_group(token, server_response):
     url = "https://api.vk.com/method/photos.saveWallPhoto"
     payload = {
         "access_token": token,
         "group_id": 212094963,
         "v": 5.131,
-        "photo": server_data["photo"],
-        "server": server_data["server"],
-        "hash": server_data["hash"]
+        "photo": server_response["photo"],
+        "server": server_response["server"],
+        "hash": server_response["hash"]
     }
     response = requests.post(
         url,
         params=payload)
     response.raise_for_status()
-    converted_response = response.json()
-    return converted_response
+    vk_response = response.json()
+    return vk_response
 
 
-def publish_comic(token, photo_data, comments):
+def publish_comic(token, loaded_result, comments):
     url = "https://api.vk.com/method/wall.post"
-    owner_id = photo_data["response"][0]["owner_id"]
-    media_id = photo_data["response"][0]["id"]
+    owner_id = loaded_result["response"][0]["owner_id"]
+    media_id = loaded_result["response"][0]["id"]
     payload = {
         "owner_id": -212094963,
         "from_group": 1,
@@ -84,9 +102,8 @@ def publish_comic(token, photo_data, comments):
         "v": 5.131,
         "attachments": f"photo{owner_id}_{media_id}"
         }
-    r = requests.post(url, params=payload)
-    r.raise_for_status()
-    return r
+    response = requests.post(url, params=payload)
+    response.raise_for_status()
 
 
 def main():
@@ -94,17 +111,17 @@ def main():
     vk_token = os.getenv("VK_ACCESS_TOKEN")
     try:
         filename, comments = fetch_comic()
-        server_url = get_server_address(vk_token)["response"]["upload_url"]
-        uploading_result = upload_img_to_server(filename, server_url)
-        vk_response = download_img_to_group(vk_token, uploading_result)
-        r = publish_comic(vk_token, vk_response, comments)
+        server_link = get_server_link(vk_token)
+        server_response = upload_img_to_server(filename, server_link)
+        vk_response = download_img_to_group(vk_token, server_response)
+        publish_comic(vk_token, vk_response, comments)
         os.remove(f"./{filename}")
     except requests.exceptions.HTTPError as err:
         print("General Error, incorrect link\n", str(err))
     except requests.ConnectionError as err:
         print("Connection Error. Check Internet connection.\n", str(err))
     except OSError as err:
-        print ("Error: %s - %s." % (err.filename, err.strerror))
+        print("Error: %s - %s." % (err.filename, err.strerror))
 
 
 if __name__ == "__main__":
