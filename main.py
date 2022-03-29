@@ -45,6 +45,15 @@ def fetch_random_comic():
     return filename, comments
 
 
+def check_api_response(api_response):
+    if "error" not in api_response.json():
+        pass
+    else:
+        raise requests.HTTPError(
+            "Ошибка с VK API",
+            api_response.json()["error"]["error_msg"])
+
+
 def get_server_link(token):
     url = "https://api.vk.com/method/photos.getWallUploadServer"
     payload = {
@@ -54,6 +63,7 @@ def get_server_link(token):
     }
     response = requests.get(url, params=payload)
     response.raise_for_status()
+    check_api_response(response)
     server_link = response.json()["response"]["upload_url"]
     return server_link
 
@@ -65,6 +75,7 @@ def upload_img_to_server(filename, upload_url):
             }
         response = requests.post(upload_url, files=files)
         response.raise_for_status()
+        check_api_response(response)
     server_response = response.json()
     return server_response
 
@@ -83,6 +94,7 @@ def upload_img_to_group(token, photo, server, hash):
         url,
         params=payload)
     response.raise_for_status()
+    check_api_response(response)
     vk_response = response.json()
     return vk_response
 
@@ -99,6 +111,7 @@ def publish_comic(token, comments, owner_id, media_id):
         }
     response = requests.post(url, params=payload)
     response.raise_for_status()
+    check_api_response(response)
 
 
 def main():
@@ -123,8 +136,8 @@ def main():
             comments,
             group_owner_id,
             media_id)
-    except requests.exceptions.HTTPError as err:
-        print("General Error, incorrect link\n", str(err))
+    except requests.HTTPError as err:
+        print(err)
     except requests.ConnectionError as err:
         print("Connection Error. Check Internet connection.\n", str(err))
     except OSError as err:
