@@ -28,7 +28,7 @@ def download_comic(url, filename):
         file.write(response.content)
 
 
-def fetch_comic():
+def fetch_random_comic():
     first_comic_num = 1
     last_comic_num = int(get_last_comic_num())
     comic_num = random.randint(first_comic_num, last_comic_num)
@@ -69,7 +69,7 @@ def upload_img_to_server(filename, upload_url):
     return server_response
 
 
-def download_img_to_group(token, server_response):
+def upload_img_to_group(token, server_response):
     url = "https://api.vk.com/method/photos.saveWallPhoto"
     payload = {
         "access_token": token,
@@ -107,10 +107,10 @@ def main():
     load_dotenv()
     vk_token = os.getenv("VK_ACCESS_TOKEN")
     try:
-        filename, comments = fetch_comic()
+        filename, comments = fetch_random_comic()
         server_link = get_server_link(vk_token)
         server_response = upload_img_to_server(filename, server_link)
-        vk_response = download_img_to_group(vk_token, server_response)
+        vk_response = upload_img_to_group(vk_token, server_response)
         publish_comic(vk_token, vk_response, comments)
         os.remove(f"./{filename}")
     except requests.exceptions.HTTPError as err:
