@@ -123,13 +123,14 @@ def main():
             comments,
             group_owner_id,
             media_id)
-        os.remove(f"./{filename}")
     except requests.exceptions.HTTPError as err:
         print("General Error, incorrect link\n", str(err))
     except requests.ConnectionError as err:
         print("Connection Error. Check Internet connection.\n", str(err))
     except OSError as err:
         print("Error: %s - %s." % (err.filename, err.strerror))
+    finally:
+        os.remove(f"./{filename}")
 
 
 if __name__ == "__main__":
