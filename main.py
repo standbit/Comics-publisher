@@ -4,7 +4,6 @@ from os.path import splitext
 from urllib.parse import urlparse
 
 import requests
-from bs4 import BeautifulSoup
 from dotenv import load_dotenv
 
 
@@ -15,12 +14,10 @@ def get_file_extension(link):
 
 
 def get_last_comic_num():
-    url = "https://xkcd.com/"
+    url = "https://xkcd.com/info.0.json"
     response = requests.get(url)
     response.raise_for_status()
-    content = BeautifulSoup(response.text, "lxml")
-    comic_url = content.body.select('a[href^="https://xkcd.com/2"]')[0].text
-    last_comic_num = urlparse(comic_url).path.split("/")[1]
+    last_comic_num = response.json()["num"]
     return last_comic_num
 
 

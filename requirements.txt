@@ -1,4 +1,2 @@
 requests==2.27.*
 python-dotenv==0.20.*
-beautifulsoup4==4.10.*
-lxml==4.8.*
