@@ -69,15 +69,15 @@ def upload_img_to_server(filename, upload_url):
     return server_response
 
 
-def upload_img_to_group(token, server_response):
+def upload_img_to_group(token, photo, server, hash):
     url = "https://api.vk.com/method/photos.saveWallPhoto"
     payload = {
         "access_token": token,
         "group_id": 212094963,
         "v": 5.131,
-        "photo": server_response["photo"],
-        "server": server_response["server"],
-        "hash": server_response["hash"]
+        "photo": photo,
+        "server": server,
+        "hash": hash,
     }
     response = requests.post(
         url,
@@ -87,10 +87,8 @@ def upload_img_to_group(token, server_response):
     return vk_response
 
 
-def publish_comic(token, loaded_result, comments):
+def publish_comic(token, comments, owner_id, media_id):
     url = "https://api.vk.com/method/wall.post"
-    owner_id = loaded_result["response"][0]["owner_id"]
-    media_id = loaded_result["response"][0]["id"]
     payload = {
         "owner_id": -212094963,
         "from_group": 1,
@@ -110,8 +108,21 @@ def main():
         filename, comments = fetch_random_comic()
         server_link = get_server_link(vk_token)
         server_response = upload_img_to_server(filename, server_link)
-        vk_response = upload_img_to_group(vk_token, server_response)
-        publish_comic(vk_token, vk_response, comments)
+        uploaded_img = server_response["photo"]
+        server_num = server_response["server"]
+        hash = server_response["hash"]
+        vk_response = upload_img_to_group(
+            vk_token,
+            uploaded_img,
+            server_num,
+            hash)
+        group_owner_id = vk_response["response"][0]["owner_id"]
+        media_id = vk_response["response"][0]["id"]
+        publish_comic(
+            vk_token,
+            comments,
+            group_owner_id,
+            media_id)
         os.remove(f"./{filename}")
     except requests.exceptions.HTTPError as err:
         print("General Error, incorrect link\n", str(err))
