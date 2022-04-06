@@ -49,8 +49,8 @@ def check_api_response(api_response):
     if "error" in api_response:
         raise requests.HTTPError(
             "Ошибка с VK API",
-           api_response["error"]["error_msg"]
-            )      
+            api_response["error"]["error_msg"]
+            )
 
 
 def get_server_link(token):
