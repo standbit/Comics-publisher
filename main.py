@@ -46,12 +46,11 @@ def fetch_random_comic():
 
 
 def check_api_response(api_response):
-    if "error" not in api_response.json():
-        pass
-    else:
+    if "error" in api_response.json():
         raise requests.HTTPError(
             "Ошибка с VK API",
-            api_response.json()["error"]["error_msg"])
+            api_response.json()["error"]["error_msg"]
+            )      
 
 
 def get_server_link(token):
