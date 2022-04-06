@@ -80,7 +80,7 @@ def upload_img_to_server(filename, upload_url):
     return server_response
 
 
-def upload_img_to_group(token, photo, server, hash):
+def upload_img_to_group(token, photo, server, hash_parameter):
     url = "https://api.vk.com/method/photos.saveWallPhoto"
     payload = {
         "access_token": token,
@@ -88,7 +88,7 @@ def upload_img_to_group(token, photo, server, hash):
         "v": 5.131,
         "photo": photo,
         "server": server,
-        "hash": hash,
+        "hash": hash_parameter,
     }
     response = requests.post(
         url,
@@ -123,12 +123,12 @@ def main():
         server_response = upload_img_to_server(filename, server_link)
         uploaded_img = server_response["photo"]
         server_num = server_response["server"]
-        hash = server_response["hash"]
+        server_hash = server_response["hash"]
         vk_response = upload_img_to_group(
             vk_token,
             uploaded_img,
             server_num,
-            hash)
+            server_hash)
         group_owner_id = vk_response["response"][0]["owner_id"]
         media_id = vk_response["response"][0]["id"]
         publish_comic(
