@@ -46,10 +46,10 @@ def fetch_random_comic():
 
 
 def check_api_response(api_response):
-    if "error" in api_response.json():
+    if "error" in api_response:
         raise requests.HTTPError(
             "Ошибка с VK API",
-            api_response.json()["error"]["error_msg"]
+           api_response["error"]["error_msg"]
             )      
 
 
@@ -62,8 +62,9 @@ def get_server_link(token):
     }
     response = requests.get(url, params=payload)
     response.raise_for_status()
-    check_api_response(response)
-    server_link = response.json()["response"]["upload_url"]
+    converted_response = response.json()
+    check_api_response(converted_response)
+    server_link = converted_response["response"]["upload_url"]
     return server_link
 
 
@@ -74,8 +75,8 @@ def upload_img_to_server(filename, upload_url):
             }
         response = requests.post(upload_url, files=files)
         response.raise_for_status()
-        check_api_response(response)
     server_response = response.json()
+    check_api_response(server_response)
     return server_response
 
 
@@ -93,8 +94,8 @@ def upload_img_to_group(token, photo, server, hash):
         url,
         params=payload)
     response.raise_for_status()
-    check_api_response(response)
     vk_response = response.json()
+    check_api_response(vk_response)
     return vk_response
 
 
@@ -110,7 +111,7 @@ def publish_comic(token, comments, owner_id, media_id):
         }
     response = requests.post(url, params=payload)
     response.raise_for_status()
-    check_api_response(response)
+    check_api_response(response.json())
 
 
 def main():
